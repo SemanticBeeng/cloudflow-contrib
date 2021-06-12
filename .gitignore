@@ -4,3 +4,8 @@ target
 
 .DS_Store
 docs/cloudflow-contrib-ghpages
+
+project/.boot/
+project/.ivy/
+project/.sbtboot/
+

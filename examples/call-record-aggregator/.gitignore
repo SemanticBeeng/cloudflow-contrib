@@ -10,6 +10,9 @@ src_managed/
 project/boot/
 project/plugins/project/
 project/activator-sbt*
+project/.boot/
+project/.ivy/
+project/.sbtboot/
 
 .env
 

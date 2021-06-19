@@ -32,5 +32,6 @@ class CallRecordIngress extends AkkaServerStreamlet {
   //end::docs-outlet-partitioner-example[]
 
   final override val shape       = StreamletShape.withOutlets(out)
+
   final override def createLogic = HttpServerLogic.default(this, out)
 }

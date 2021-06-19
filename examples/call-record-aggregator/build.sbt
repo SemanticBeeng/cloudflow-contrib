@@ -5,7 +5,7 @@ lazy val root =
   Project(id = "root", base = file("."))
     .enablePlugins(ScalafmtPlugin)
     .settings(
-      name := "root",
+      name := "call-root-aggregator-root",
       scalafmtOnCompile := true,
       skip in publish := true,
     )
@@ -39,7 +39,7 @@ lazy val akkaCdrIngestor= appModule("akka-cdr-ingestor")
       libraryDependencies ++= Seq(
         "com.typesafe.akka"         %% "akka-http-spray-json"   % "10.1.12",
         "ch.qos.logback"            %  "logback-classic"        % "1.2.3",
-        "org.scalatest"             %% "scalatest"              % "3.0.8"    % "test"
+        "org.scalatest"             %% "scalatest"              % "3.2.9"    % "test"
       )
     )
   .dependsOn(datamodel)
@@ -51,7 +51,7 @@ lazy val akkaJavaAggregationOutput= appModule("akka-java-aggregation-output")
     libraryDependencies ++= Seq(
       "com.typesafe.akka"      %% "akka-http-spray-json"   % "10.1.12",
       "ch.qos.logback"         %  "logback-classic"        % "1.2.3",
-      "org.scalatest"          %% "scalatest"              % "3.0.8"    % "test"
+      "org.scalatest"          %% "scalatest"              % "3.2.9"    % "test"
     )
   )
   .dependsOn(datamodel)
@@ -66,7 +66,7 @@ lazy val sparkAggregation = appModule("spark-aggregation")
       libraryDependencies ~= fixSparkNativeCloudflowDeps,
       libraryDependencies ++= Seq(
         "ch.qos.logback" %  "logback-classic" % "1.2.3",
-        "org.scalatest"  %% "scalatest"       % "3.0.8"  % "test"
+        "org.scalatest"  %% "scalatest"       % "3.2.9"  % "test"
       )
     )
   .dependsOn(datamodel)

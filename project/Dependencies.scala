@@ -9,8 +9,8 @@ object Dependencies {
   object Versions {
     val cloudflowVersion = "2.1.0"
 
-    val flinkVersion = "1.13.1"
-    val sparkVersion = "3.1.1"
+    val flinkVersion = "1.13.2"
+    val sparkVersion = "3.1.2"
     val akka = "2.6.14"
     val jackson = "2.11.4"
     val fabric8 = "5.0.0"
@@ -38,7 +38,7 @@ object Dependencies {
     val sparkSql = "org.apache.spark" %% "spark-sql" % Versions.sparkVersion
     val sparkSqlKafka = "org.apache.spark" %% "spark-sql-kafka-0-10" % Versions.sparkVersion
     val sparkStreaming = "org.apache.spark" %% "spark-streaming" % Versions.sparkVersion
-    val sparkProto = "com.thesamet.scalapb" %% "sparksql-scalapb" % "0.9.0"
+    val sparkProto = "com.thesamet.scalapb" %% "sparksql-scalapb" % "0.11.0"
 
     val jacksonCore = "com.fasterxml.jackson.core" % "jackson-core" % Versions.jackson
     val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % Versions.jackson

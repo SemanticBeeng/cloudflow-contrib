@@ -57,6 +57,8 @@ cat > "${OUTPUT_CMD}" << EOF
         --conf spark.kubernetes.executor.podTemplateFile=output/pod-template.yaml \\
         --conf spark.kubernetes.authenticate.driver.serviceAccountName=${SERVICE_ACCOUNT} \\
         --conf spark.kubernetes.container.image=${docker_image} \\
+        --conf spark.driver.memory=6g \\
+        --conf spark.testing.memory=6g \\
 ${runtime_config}
         spark-internal
 EOF

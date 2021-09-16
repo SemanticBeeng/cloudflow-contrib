@@ -35,4 +35,5 @@ jq -rc ".items[] | select(.metadata.name == \"${APPLICATION}\") | .spec.deployme
         mkdir -p ".tmp/${APPLICATION}/${streamlet_name}/secrets"
         jq -rc ".data.\"${secret_data}\" | @base64d" "${SECRET_FILE}" > ".tmp/${APPLICATION}/${streamlet_name}/secrets/${secret_data}"
       done
+    echo "while loop done fetch"
   done

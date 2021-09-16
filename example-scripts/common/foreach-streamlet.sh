@@ -13,4 +13,5 @@ fi
 
 for streamlet_folder in .tmp/${APPLICATION}/*/; do
   eval "$COMMAND $streamlet_folder ${APPLICATION} ${@:3}"
+  echo "command is: $COMMAND $streamlet_folder ${APPLICATION}"
 done

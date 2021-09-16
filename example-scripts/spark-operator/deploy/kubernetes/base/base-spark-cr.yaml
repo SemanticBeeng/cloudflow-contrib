@@ -3,6 +3,7 @@ kind: SparkApplication
 metadata:
   generation: 1
   name: <CLUSTER_ID>
+  namespace: <NAME_SPACE>
 spec:
   driver:
     annotations: {}

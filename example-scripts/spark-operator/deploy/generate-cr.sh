@@ -30,29 +30,34 @@ STAGE0="${STREAMLET_FOLDER}output/kubernetes/stage0/stage0.json"
 
 cluster_id=$(jq -rc '.name' ${STREAMLET_FOLDER}streamlet.json | sed s'/\./\-/')
 docker_image=$(jq -rc '.image' ${STREAMLET_FOLDER}streamlet.json)
-
-sed "s/  name: <CLUSTER_ID>/  name: ${cluster_id}/" "${STREAMLET_FOLDER}output/kubernetes/base/base-spark-cr.yaml" > "${STREAMLET_FOLDER}output/kubernetes/base/spark-cr.yaml"
+echo "doing sed in generate cr.sh"
+sed "s/  name: <CLUSTER_ID>/  name: ${cluster_id}/g; s/  namespace: <NAME_SPACE>/  namespace: ${APPLICATION}/g;" "${STREAMLET_FOLDER}output/kubernetes/base/base-spark-cr.yaml" > "${STREAMLET_FOLDER}output/kubernetes/base/spark-cr.yaml"
 
 # TODO: those configuration extraction is extra fragile ...
 runtime_config=$(jq -rc '[(paths(scalars) as $p | { ($p|join(".")): (getpath($p) | tostring) })] | add' ${STREAMLET_FOLDER}secrets/runtime-config.conf)
 executor_config=$(jq -rc '.spark.executor | [(paths(scalars) as $p | { ($p|join(".")): (getpath($p)) })] | add' ${STREAMLET_FOLDER}secrets/runtime-config.conf)
 driver_config=$(jq -rc '.spark.driver | [(paths(scalars) as $p | { ($p|join(".")): (getpath($p)) })] | add' ${STREAMLET_FOLDER}secrets/runtime-config.conf)
+echo " pvc name "
 
 pvc_name="not-exists"
 pvc_claim_name="not-exists"
 # find the attached PVC
+echo "about to while in generate cr. sh"
+
 jq -rc '.kubernetes.pods.pod.containers.container."volume-mounts" | keys[]' "${STREAMLET_FOLDER}secrets/pods-config.conf" | \
   while IFS='' read volume_name; do
-    # echo "Volume name: $volume_name"
+    # echo "Volume name: $volume_name"echo "doing sed in generate cr.sh"
+    echo "in while cr.sh"
 
     is_pvc=$(jq -rc ".kubernetes.pods.pod.volumes.${volume_name}.pvc" "${STREAMLET_FOLDER}secrets/pods-config.conf")
+    echo "pvc is $is_pvc"
     if [ -z $is_pvc ] || [ "$is_pvc" = "null" ] || [ "$is_pvc" = "" ]; then
       # Not a PVC
       true
     else
       pvc_name="$volume_name"
       pvc_claim_name=$(jq -r ".kubernetes.pods.pod.volumes.${volume_name}.pvc.name" "${STREAMLET_FOLDER}secrets/pods-config.conf")
-
+      echo "claim name $pvc_claim_name"
       # Write the ouput file and exit
       # TODO improve especially error handling
       jq -r ".metadata.name = \"${cluster_id}\" | \
@@ -60,17 +65,16 @@ jq -rc '.kubernetes.pods.pod.containers.container."volume-mounts" | keys[]' "${S
             .spec.image = \"${docker_image}\" | \
             .spec.sparkConf = ${runtime_config} | \
             .spec.driver.secrets[0].name = \"${secret_name}\" | \
-            .spec.driver += ${driver_config} | \
             .spec.executor.secrets[0].name = \"${secret_name}\" | \
-            .spec.executor += ${executor_config} | \
             .spec.driver.serviceAccount = \"${SERVICE_ACCOUNT}\" | \
             .spec.driver.volumeMounts[0].name = \"${pvc_name}\" | \
             .spec.executor.volumeMounts[0].name = \"${pvc_name}\" | \
             .spec.volumes[0].name = \"${pvc_name}\" | \
             .spec.volumes[0].persistentVolumeClaim.claimName = \"${pvc_claim_name}\"" "${BASE_STAGE0}" \
         > "${STAGE0}"
-
+      echo "about to kustomize ${STREAMLET_FOLDER}output/kubernetes/stage0"
       kubectl kustomize "${STREAMLET_FOLDER}output/kubernetes/stage0" > "${STREAMLET_FOLDER}output/sparkapp.yaml"
+      echo "done kustomize"
     fi
   done
 

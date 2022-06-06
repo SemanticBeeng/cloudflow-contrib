@@ -58,11 +58,7 @@ trait ItDeploySpec extends ItSpec {
 
   "The application" - {
     "should deploy" in {
-      val res = cli.run(
-        commands.Deploy(
-          crFile = resource.cr,
-          confs = Seq(resource.defaultConfiguration),
-          unmanagedRuntimes = Seq("flink", "spark")))
+      val res = cli.run(commands.Deploy(crFile = resource.cr, confs = Seq(resource.defaultConfiguration)))
       assertSuccess(res)
     }
 
@@ -99,11 +95,7 @@ trait ItDeploySpec extends ItSpec {
     }
 
     "should re-deploy to continue testing" in {
-      val deploy = cli.run(
-        commands.Deploy(
-          crFile = resource.cr,
-          confs = Seq(resource.defaultConfiguration),
-          unmanagedRuntimes = Seq("flink", "spark")))
+      val deploy = cli.run(commands.Deploy(crFile = resource.cr, confs = Seq(resource.defaultConfiguration)))
       assertSuccess(deploy)
       eventually {
         val res = cli.run(commands.Status(appName))
@@ -134,7 +126,8 @@ trait ItBaseSpec extends ItSpec {
   "is configurable" - {
     "reconfiguration should succeed" in {
       configureApp() { _ =>
-        cli.run(commands.Configure(appName, Seq(resource.updateConfig, resource.defaultConfiguration)))
+        cli.run(
+          commands.Configure(cloudflowApp = appName, confs = Seq(resource.updateConfig, resource.defaultConfiguration)))
       }
     }
     "reconfiguration should affect these streamlets:" - {
@@ -154,7 +147,10 @@ trait ItFrameworkConfigSpec extends ItSpec {
   "should reconfigure a spark application" in {
     note("reconfigure spark-specific configuration")
     configureApp() { _ =>
-      cli.run(commands.Configure(appName, Seq(resource.updateSparkConfiguration, resource.defaultConfiguration)))
+      cli.run(
+        commands.Configure(
+          cloudflowApp = appName,
+          confs = Seq(resource.updateSparkConfiguration, resource.defaultConfiguration)))
     }
 
     note("verifying configuration update")

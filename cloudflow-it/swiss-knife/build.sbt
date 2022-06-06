@@ -28,8 +28,11 @@ lazy val app = (project in file("./app"))
   )
   
 lazy val datamodel = (project in file("datamodel"))
-  .enablePlugins(CloudflowLibraryPlugin)
-  .settings(commonSettings)
+  .settings(
+    commonSettings,
+    Compile / sourceGenerators += (Compile / avroScalaGenerateSpecific).taskValue,
+    libraryDependencies += Cloudflow.library.CloudflowAvro
+  )
 
 lazy val akka = (project in file("./akka"))
   .enablePlugins(CloudflowAkkaPlugin)
@@ -37,34 +40,30 @@ lazy val akka = (project in file("./akka"))
   .settings(
     name := "swiss-knife-akka",
     libraryDependencies ++= Seq(
-      "ch.qos.logback" % "logback-classic" % "1.2.3",
+      "ch.qos.logback" % "logback-classic" % "1.2.10",
     )
   )
   .dependsOn(datamodel)
 
 lazy val spark = (project in file("./spark"))
-  .enablePlugins(CloudflowSparkPlugin, CloudflowNativeSparkPlugin)
+  .enablePlugins(CloudflowNativeSparkPlugin)
   .settings(commonSettings)  
   .settings(
     name := "swiss-knife-spark",
-    baseDockerInstructions := sparkNativeCloudflowDockerInstructions.value,
-    libraryDependencies ~= fixSparkNativeCloudflowDeps
   )
   .dependsOn(datamodel)
 
 lazy val flink = (project in file("./flink"))
-  .enablePlugins(CloudflowFlinkPlugin, CloudflowNativeFlinkPlugin)
+  .enablePlugins(CloudflowNativeFlinkPlugin)
   .settings(commonSettings)
   .settings(
     name := "swiss-knife-flink",
-    baseDockerInstructions := flinkNativeCloudflowDockerInstructions.value,
-    libraryDependencies ~= fixFlinkNativeCloudflowDeps
   )
   .dependsOn(datamodel)
 
 lazy val commonSettings = Seq(
   headerLicense := Some(HeaderLicense.ALv2("(C) 2016-2020", "Lightbend Inc. <https://www.lightbend.com>")),
-  scalaVersion := "2.12.11",
+  scalaVersion := "2.12.15",
   scalacOptions ++= Seq(
     "-encoding", "UTF-8",
     "-target:jvm-1.8",

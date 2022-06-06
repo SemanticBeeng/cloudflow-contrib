@@ -7,7 +7,7 @@ lazy val root =
     .enablePlugins(ScalafmtPlugin)
     .settings(
       name := "root",
-      skip in publish := true,
+      publish / skip := true,
       scalafmtOnCompile := true,
     )
     .withId("root")
@@ -26,12 +26,15 @@ lazy val taxiRidePipeline = appModule("taxi-ride-pipeline")
   .settings(
     name := "taxi-ride-fare",
     runLocalConfigFile := Some("taxi-ride-pipeline/src/main/resources/local.conf"),
-    runLocalLog4jConfigFile := Some("taxi-ride-pipeline/src/main/resources/log4j.properties"),
+    runLocalLog4jConfigFile := Some("taxi-ride-pipeline/src/main/resources/log4j.properties")
   )
 
 lazy val datamodel = appModule("datamodel")
-  .enablePlugins(CloudflowLibraryPlugin)
-  .settings(commonSettings)
+  .settings(
+    commonSettings,
+    Compile / sourceGenerators += (Compile / avroScalaGenerateSpecific).taskValue,
+    libraryDependencies += Cloudflow.library.CloudflowAvro
+  )
 
 lazy val ingestor = appModule("ingestor")
   .enablePlugins(CloudflowAkkaPlugin)
@@ -39,7 +42,7 @@ lazy val ingestor = appModule("ingestor")
     commonSettings,
     libraryDependencies ++= Seq(
       "com.typesafe.akka"         %% "akka-http-spray-json"   % "10.1.12",
-      "ch.qos.logback"            %  "logback-classic"        % "1.2.3",
+      "ch.qos.logback"            %  "logback-classic"        % "1.2.10",
       "org.scalatest"             %% "scalatest"              % "3.0.8"    % "test"
     )
   )
@@ -47,15 +50,17 @@ lazy val ingestor = appModule("ingestor")
 
 
 lazy val processor = appModule("processor")
-  .enablePlugins(CloudflowFlinkPlugin, CloudflowNativeFlinkPlugin)
+  .enablePlugins(CloudflowNativeFlinkPlugin)
   .settings(
     commonSettings,
-    baseDockerInstructions := flinkNativeCloudflowDockerInstructions.value,
-    libraryDependencies ~= fixFlinkNativeCloudflowDeps,
     libraryDependencies ++= Seq(
-        "ch.qos.logback"         %  "logback-classic"        % "1.2.3",
+        "ch.qos.logback"         %  "logback-classic"        % "1.2.10",
         "org.scalatest"          %% "scalatest"              % "3.0.8"  % "test"
       ),
+    dependencyOverrides ++= Seq(
+     "org.apache.kafka" % "kafka-clients" % "3.0.0",
+     "org.apache.commons" % "commons-compress" % "1.21"
+    ),
     parallelExecution in Test := false
   )
   .dependsOn(datamodel)
@@ -65,7 +70,7 @@ lazy val ridelogger = appModule("logger")
   .settings(
     commonSettings,
     libraryDependencies ++= Seq(
-      "ch.qos.logback"         %  "logback-classic"        % "1.2.3",
+      "ch.qos.logback"         %  "logback-classic"        % "1.2.10",
       "org.scalatest"          %% "scalatest"              % "3.0.8"    % "test"
     )
   )
@@ -83,7 +88,7 @@ def appModule(moduleID: String): Project = {
 lazy val commonSettings = Seq(
   organization := "com.lightbend.cloudflow",
   headerLicense := Some(HeaderLicense.ALv2("(C) 2016-2020", "Lightbend Inc. <https://www.lightbend.com>")),
-  scalaVersion := "2.12.11",
+  scalaVersion := "2.12.15",
   scalacOptions ++= Seq(
     "-encoding", "UTF-8",
     "-target:jvm-1.8",
@@ -96,7 +101,6 @@ lazy val commonSettings = Seq(
     "-language:_",
     "-unchecked"
   ),
-
   scalacOptions in (Compile, console) --= Seq("-Ywarn-unused", "-Ywarn-unused-import"),
   scalacOptions in (Test, console) := (scalacOptions in (Compile, console)).value,
 )

@@ -3,29 +3,28 @@ import sbt._
 
 object Dependencies {
 
-  val Scala212 = "2.12.13"
-  val Scala213 = "2.13.5"
+  val Scala212 = "2.12.15"
+  val Scala213 = "2.13.8"
 
   object Versions {
-    val cloudflowVersion = "2.1.0"
+    val cloudflowVersion = "2.3.1-RC1"
 
-    val flinkVersion = "1.13.3"
-    val sparkVersion = "3.1.2"
-    val akka = "2.6.14"
-    val jackson = "2.11.4"
+    val flinkVersion = "1.14.4"
+    val sparkVersion = "3.2.1"
+    val akka = "2.6.19"
+    val jackson = "2.12.6"
     val fabric8 = "5.0.0"
-    val scalaTest = "3.2.7"
-    val logbackVersion = "1.2.3"
+    val scalaTest = "3.2.11"
+    val logbackVersion = "1.2.10"
   }
 
   object Compile {
     val cloudflowStreamlet = "com.lightbend.cloudflow" %% "cloudflow-streamlets" % Versions.cloudflowVersion
-
+    val cloudflowAvro = "com.lightbend.cloudflow" %% "cloudflow-avro" % Versions.cloudflowVersion
     val akkaActor = "com.typesafe.akka" %% "akka-actor" % Versions.akka
     val akkaStream = "com.typesafe.akka" %% "akka-stream" % Versions.akka
     val akkaProtobuf = "com.typesafe.akka" %% "akka-protobuf" % Versions.akka
     val akkaDiscovery = "com.typesafe.akka" %% "akka-discovery" % Versions.akka
-    val okio = "com.squareup.okio" % "okio" % "1.13.0"
 
     val flink = "org.apache.flink" %% "flink-scala" % Versions.flinkVersion
     val flinkStreaming = "org.apache.flink" %% "flink-streaming-scala" % Versions.flinkVersion
@@ -44,7 +43,7 @@ object Dependencies {
     val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % Versions.jackson
     val jacksonScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % Versions.jackson
 
-    val log4jOverSlf4j = "org.slf4j" % "log4j-over-slf4j" % "1.7.30"
+    val log4jOverSlf4j = "org.slf4j" % "log4j-over-slf4j" % "1.7.35"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % Versions.logbackVersion
     val logbackCore = "ch.qos.logback" % "logback-core" % Versions.logbackVersion
 
@@ -53,7 +52,7 @@ object Dependencies {
     // Reference:
     // https://github.com/fabric8io/kubernetes-client/blob/0c4513ff30ac9229426f1481a46fde2eb54933d9/kubernetes-client/src/main/java/io/fabric8/kubernetes/client/dsl/internal/core/v1/PodOperationsImpl.java#L451
     val commonsCodec = "commons-codec" % "commons-codec" % "1.15"
-    val commonsCompress = "org.apache.commons" % "commons-compress" % "1.20"
+    val commonsCompress = "org.apache.commons" % "commons-compress" % "1.21"
 
     val scalatest = "org.scalatest" %% "scalatest" % Versions.scalaTest
   }
@@ -61,58 +60,71 @@ object Dependencies {
   object TestDeps {
 
     val scalatestJunit = "org.scalatestplus" %% "junit-4-13" % s"${Versions.scalaTest}.0" % Test
-    val jodaTime = "joda-time" % "joda-time" % "2.10.6"
-
+    val jodaTime = "joda-time" % "joda-time" % "2.10.14"
+    val scalaxmlSpark = "org.scala-lang.modules" %% "scala-xml" % "1.2.0"
   }
 
   val flinkStreamlet = Seq(
     libraryDependencies ++= Seq(
-        Compile.cloudflowStreamlet,
-        Compile.flink,
-        Compile.flinkStreaming,
-        Compile.flinkKafka,
-        Compile.flinkAvro,
-        Compile.flinkWeb,
-        Compile.logbackClassic,
-        Compile.logbackCore,
-        Compile.scalatest % Test))
+      Compile.cloudflowStreamlet,
+      Compile.flink,
+      Compile.flinkStreaming,
+      Compile.flinkKafka,
+      Compile.flinkAvro,
+      Compile.flinkWeb,
+      Compile.logbackClassic,
+      Compile.logbackCore,
+      Compile.scalatest % Test))
 
   val flinkTests =
-    libraryDependencies ++= Seq(Compile.scalatest % Test, TestDeps.scalatestJunit, TestDeps.jodaTime)
+    libraryDependencies ++= Seq(
+      Compile.cloudflowAvro % Test,
+      Compile.scalatest % Test,
+      TestDeps.scalatestJunit,
+      TestDeps.jodaTime)
 
   val sparkStreamlet = Seq(
     libraryDependencies ++= Seq(
-        Compile.cloudflowStreamlet,
-        Compile.akkaActor,
-        Compile.akkaStream,
-        Compile.akkaProtobuf,
-        Compile.akkaDiscovery,
-        Compile.okio,
-        Compile.log4jOverSlf4j,
-        Compile.spark,
-        Compile.sparkMllib,
-        Compile.sparkSql,
-        Compile.sparkSqlKafka,
-        Compile.sparkStreaming,
-        Compile.sparkProto,
-        Compile.logbackClassic,
-        Compile.logbackCore,
-        Compile.scalatest % Test),
+      Compile.cloudflowStreamlet,
+      Compile.cloudflowAvro % Test,
+      Compile.akkaActor,
+      Compile.akkaStream,
+      Compile.akkaProtobuf,
+      Compile.akkaDiscovery,
+      Compile.log4jOverSlf4j,
+      Compile.spark,
+      Compile.sparkMllib,
+      Compile.sparkSql,
+      Compile.sparkSqlKafka,
+      Compile.sparkStreaming,
+      Compile.sparkProto,
+      Compile.logbackClassic,
+      Compile.logbackCore,
+      Compile.scalatest % Test),
     libraryDependencies ~= { _.map(_.exclude("org.slf4j", "slf4j-log4j12")) },
     dependencyOverrides ++= Seq(Compile.jacksonCore, Compile.jacksonDatabind, Compile.jacksonScala))
 
   val sparkTestkit = Seq(
     libraryDependencies ++= Seq(Compile.scalatest, TestDeps.scalatestJunit, TestDeps.jodaTime),
-    dependencyOverrides ++= Seq(Compile.jacksonCore, Compile.jacksonDatabind, Compile.jacksonScala))
+    dependencyOverrides ++= Seq(
+      Compile.jacksonCore,
+      Compile.jacksonDatabind,
+      Compile.jacksonScala,
+      TestDeps.scalaxmlSpark))
 
-  val sparkTests =
-    dependencyOverrides ++= Seq(Compile.jacksonCore, Compile.jacksonDatabind, Compile.jacksonScala)
+  val sparkTests = Seq(
+    libraryDependencies ++= Seq(Compile.cloudflowAvro % Test),
+    dependencyOverrides ++= Seq(
+      Compile.jacksonCore,
+      Compile.jacksonDatabind,
+      Compile.jacksonScala,
+      TestDeps.scalaxmlSpark))
 
   val cloudflowIt =
     libraryDependencies ++= Seq(
-        Compile.scalatest % Test,
-        Compile.cloudflowCli % Test,
-        Compile.commonsCodec % Test,
-        Compile.commonsCompress % Test)
+      Compile.scalatest % Test,
+      Compile.cloudflowCli % Test,
+      Compile.commonsCodec % Test,
+      Compile.commonsCompress % Test)
 
 }

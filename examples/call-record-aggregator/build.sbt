@@ -5,9 +5,9 @@ lazy val root =
   Project(id = "root", base = file("."))
     .enablePlugins(ScalafmtPlugin)
     .settings(
-      name := "call-root-aggregator-root",
+      name := "root",
       scalafmtOnCompile := true,
-      skip in publish := true,
+      publish / skip := true,
     )
     .withId("root")
     .settings(commonSettings)
@@ -30,7 +30,10 @@ lazy val callRecordPipeline = appModule("call-record-pipeline")
 //end::docs-CloudflowApplicationPlugin-example[]
 
 lazy val datamodel = appModule("datamodel")
-  .enablePlugins(CloudflowLibraryPlugin)
+  .settings(
+    Compile / sourceGenerators += (Compile / avroScalaGenerateSpecific).taskValue,
+    libraryDependencies += Cloudflow.library.CloudflowAvro
+  )
 
 lazy val akkaCdrIngestor= appModule("akka-cdr-ingestor")
     .enablePlugins(CloudflowAkkaPlugin)
@@ -38,8 +41,8 @@ lazy val akkaCdrIngestor= appModule("akka-cdr-ingestor")
       commonSettings,
       libraryDependencies ++= Seq(
         "com.typesafe.akka"         %% "akka-http-spray-json"   % "10.1.12",
-        "ch.qos.logback"            %  "logback-classic"        % "1.2.3",
-        "org.scalatest"             %% "scalatest"              % "3.2.9"    % "test"
+        "ch.qos.logback"            %  "logback-classic"        % "1.2.10",
+        "org.scalatest"             %% "scalatest"              % "3.0.8"    % "test"
       )
     )
   .dependsOn(datamodel)
@@ -50,23 +53,21 @@ lazy val akkaJavaAggregationOutput= appModule("akka-java-aggregation-output")
     commonSettings,
     libraryDependencies ++= Seq(
       "com.typesafe.akka"      %% "akka-http-spray-json"   % "10.1.12",
-      "ch.qos.logback"         %  "logback-classic"        % "1.2.3",
-      "org.scalatest"          %% "scalatest"              % "3.2.9"    % "test"
+      "ch.qos.logback"         %  "logback-classic"        % "1.2.10",
+      "org.scalatest"          %% "scalatest"              % "3.0.8"    % "test"
     )
   )
   .dependsOn(datamodel)
 
 lazy val sparkAggregation = appModule("spark-aggregation")
-    .enablePlugins(CloudflowSparkPlugin, CloudflowNativeSparkPlugin)
+    .enablePlugins(CloudflowNativeSparkPlugin)
     .settings(
       commonSettings,
       Test / parallelExecution := false,
       Test / fork := true,
-      baseDockerInstructions := sparkNativeCloudflowDockerInstructions.value,
-      libraryDependencies ~= fixSparkNativeCloudflowDeps,
       libraryDependencies ++= Seq(
-        "ch.qos.logback" %  "logback-classic" % "1.2.3",
-        "org.scalatest"  %% "scalatest"       % "3.2.9"  % "test"
+        "ch.qos.logback" %  "logback-classic" % "1.2.10",
+        "org.scalatest"  %% "scalatest"       % "3.0.8"  % "test"
       )
     )
   .dependsOn(datamodel)
@@ -83,7 +84,7 @@ def appModule(moduleID: String): Project = {
 lazy val commonSettings = Seq(
   organization := "com.lightbend.cloudflow",
   headerLicense := Some(HeaderLicense.ALv2("(C) 2016-2020", "Lightbend Inc. <https://www.lightbend.com>")),
-  scalaVersion := "2.12.11",
+  scalaVersion := "2.12.15",
   javacOptions += "-Xlint:deprecation",
   scalacOptions ++= Seq(
     "-encoding", "UTF-8",

@@ -46,8 +46,9 @@ lazy val flinkSbtPlugin =
       sbtPlugin := true,
       crossSbtVersions := Vector("1.4.9"),
       buildInfoKeys := Seq[BuildInfoKey](version),
-      addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.8.2"),
+      addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.8.3"),
       addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.25"),
+      addSbtPlugin("com.lightbend.cloudflow" % "sbt-cloudflow" % Dependencies.Versions.cloudflowVersion),
       scriptedLaunchOpts := {
         scriptedLaunchOpts.value ++
         Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
@@ -93,7 +94,7 @@ lazy val sparkTests =
       crossScalaVersions := Vector(Dependencies.Scala212),
       scalafmtOnCompile := true,
       (Test / sourceGenerators) += (Test / avroScalaGenerateSpecific).taskValue,
-      Test / parallelExecution in Test := false)
+      Test / parallelExecution := false)
 
 lazy val sparkSbtPlugin =
   Project(id = "cloudflow-sbt-spark", base = file("cloudflow-sbt-spark"))
@@ -106,8 +107,9 @@ lazy val sparkSbtPlugin =
       sbtPlugin := true,
       crossSbtVersions := Vector("1.4.9"),
       buildInfoKeys := Seq[BuildInfoKey](version),
-      addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.8.2"),
+      addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.8.3"),
       addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.25"),
+      addSbtPlugin("com.lightbend.cloudflow" % "sbt-cloudflow" % Dependencies.Versions.cloudflowVersion),
       scriptedLaunchOpts := {
         scriptedLaunchOpts.value ++
         Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
@@ -125,14 +127,14 @@ lazy val cloudflowIt =
     .configs(IntegrationTest.extend(Test))
     .settings(Defaults.itSettings, Dependencies.cloudflowIt)
     .settings(
-      skip in publish := true,
+      publish / skip := true,
       scalaVersion := Dependencies.Scala213,
       crossScalaVersions := Vector(Dependencies.Scala213),
       inConfig(IntegrationTest)(org.scalafmt.sbt.ScalafmtPlugin.scalafmtConfigSettings),
       IntegrationTest / fork := true)
 
 lazy val root = Project(id = "root", base = file("."))
-  .settings(name := "root", skip in publish := true, scalafmtOnCompile := true)
+  .settings(name := "root", publish / skip := true, scalafmtOnCompile := true)
   .withId("root")
   .aggregate(
     flink,
@@ -149,7 +151,7 @@ lazy val flinkDocs = Project(id = "flink-docs", base = file("flink-docs"))
   .enablePlugins(ScalaUnidocPlugin)
   .settings(
     name := "flink-docs",
-    skip in publish := true,
+    publish / skip := true,
     scalafmtOnCompile := true,
     ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(flink, flinkTestkit))
   .aggregate(flink, flinkTestkit)
@@ -158,7 +160,17 @@ lazy val sparkDocs = Project(id = "spark-docs", base = file("spark-docs"))
   .enablePlugins(ScalaUnidocPlugin)
   .settings(
     name := "spark-docs",
-    skip in publish := true,
+    publish / skip := true,
     scalafmtOnCompile := true,
     ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(spark, sparkTestkit))
   .aggregate(spark, sparkTestkit)
+
+lazy val setVersionFromTag = taskKey[Unit]("Set a stable version from env variable")
+
+setVersionFromTag := {
+  IO.write(
+    file("version.sbt"),
+    s"""ThisBuild / version := "${sys.env
+      .get("VERSION")
+      .getOrElse("0.0.0-SNAPSHOT")}"""")
+}
